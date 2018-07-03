@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reflection;
-using System.Runtime.Loader;
 using System.Threading;
 using Bitfinex.Client.Websocket.Client;
 using Bitfinex.Client.Websocket.Requests;
@@ -27,7 +26,6 @@ namespace Bitfinex.Client.Websocket.Sample
             InitLogging();
 
             AppDomain.CurrentDomain.ProcessExit += CurrentDomainOnProcessExit;
-            AssemblyLoadContext.Default.Unloading += DefaultOnUnloading;
             Console.CancelKeyPress += ConsoleOnCancelKeyPress;
 
             Console.WriteLine("|=======================|");
@@ -40,7 +38,6 @@ namespace Bitfinex.Client.Websocket.Sample
             Log.Debug("====================================");
 
 
-            //var url = new Uri("wss://real.okex.com:10441/websocket");
             var url = BitfinexValues.ApiWebsocketUrl;
             var communicator = new BitfinexWebsocketCommunicator(url);
             var client = new BitfinexWebsocketClient(communicator);
@@ -97,7 +94,7 @@ namespace Bitfinex.Client.Websocket.Sample
 
         private static void SubscribeToStreams(BitfinexWebsocketClient client)
         {
-            client.Streams.PongStream.Subscribe(pong => Log.Information($"Pong received! Id: {pong.Cid}"));
+            client.Streams.PongStream.Subscribe(pong => { Log.Information($"Pong received! Id: {pong.Cid}"); });
             client.Streams.TickerStream.Subscribe(ticker =>
                 Log.Information($"{ticker.Pair} - last price: {ticker.LastPrice}, bid: {ticker.Bid}, ask: {ticker.Ask}"));
             client.Streams.TradesStream.Where(x => x.Type == TradeType.Executed).Subscribe(x =>
@@ -145,12 +142,6 @@ namespace Bitfinex.Client.Websocket.Sample
         private static void CurrentDomainOnProcessExit(object sender, EventArgs eventArgs)
         {
             Log.Warning("Exiting process");
-            ExitEvent.Set();
-        }
-
-        private static void DefaultOnUnloading(AssemblyLoadContext assemblyLoadContext)
-        {
-            Log.Warning("Unloading process");
             ExitEvent.Set();
         }
 

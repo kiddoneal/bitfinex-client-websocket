@@ -1,7 +1,11 @@
 using System;
+using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Bitfinex.Client.Websocket.Websockets;
+using Serilog;
+using Serilog.Events;
 using Xunit;
 
 namespace Bitfinex.Client.Websocket.Tests.Integration
@@ -11,6 +15,14 @@ namespace Bitfinex.Client.Websocket.Tests.Integration
         [Fact]
         public async Task OnStarting_ShouldGetInfoResponse()
         {
+            var executingDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            var logPath = Path.Combine(executingDir, "logs", "verbose.log");
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.File(logPath, rollingInterval: RollingInterval.Day)
+                .WriteTo.ColoredConsole(LogEventLevel.Verbose)
+                .CreateLogger();
+
             var url = BitfinexValues.ApiWebsocketUrl;
             using (var communicator = new BitfinexWebsocketCommunicator(url))
             {
@@ -28,7 +40,7 @@ namespace Bitfinex.Client.Websocket.Tests.Integration
                 receivedEvent.WaitOne(TimeSpan.FromSeconds(30));
 
                 Assert.NotNull(received);
-                Assert.Equal("{\"event\":\"info\",\"version\":2}", received);
+                Assert.Equal("{\"event\":\"info\",\"version\":2,\"platform\":{\"status\":1}}", received);
             }
         }
     }

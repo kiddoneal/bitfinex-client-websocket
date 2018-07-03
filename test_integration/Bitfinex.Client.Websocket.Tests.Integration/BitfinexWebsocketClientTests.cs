@@ -1,22 +1,36 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Bitfinex.Client.Websocket.Client;
 using Bitfinex.Client.Websocket.Requests;
 using Bitfinex.Client.Websocket.Responses;
 using Bitfinex.Client.Websocket.Websockets;
+using Serilog;
+using Serilog.Events;
 using Xunit;
 
 namespace Bitfinex.Client.Websocket.Tests.Integration
 {
     public class BitfinexWebsocketClientTests
     {
-        private static readonly string API_KEY = "your_api_key";
-        private static readonly string API_SECRET = "";
+        private static readonly string API_KEY = "ABW7OS66EvtQtZ4UZ5b51SVur0KQALrROCZkWU1OiNM";
+        private static readonly string API_SECRET = "oF4Y25DOmZOHJxCUEJeDnTYaUz0GnKPjV31HZGoQ3ZR";
+
+        private static string executingDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+        private static string logPath = Path.Combine(executingDir, "logs", "verbose.log");
+
 
         [Fact]
         public async Task PingPong()
         {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.File(logPath, rollingInterval: RollingInterval.Day)
+                .WriteTo.ColoredConsole(LogEventLevel.Verbose)
+                .CreateLogger();
+
             var url = BitfinexValues.ApiWebsocketUrl;
             using (var communicator = new BitfinexWebsocketCommunicator(url))
             {
@@ -48,6 +62,12 @@ namespace Bitfinex.Client.Websocket.Tests.Integration
         [SkippableFact]
         public async Task Authentication()
         {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.File(logPath, rollingInterval: RollingInterval.Day)
+                .WriteTo.ColoredConsole(LogEventLevel.Verbose)
+                .CreateLogger();
+
             Skip.If(string.IsNullOrWhiteSpace(API_SECRET));
 
             var url = BitfinexValues.ApiWebsocketUrl;

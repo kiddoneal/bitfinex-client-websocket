@@ -55,8 +55,6 @@ namespace Bitfinex.Client.Websocket.Client
             return Send(new AuthenticationRequest(apiKey, apiSecret));
         }
 
-
-
         private void HandleMessage(string message)
         {
             try
